@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head><title>Jaxel SDR Admin</title></head>
+<body>
+  <h1>Jaxel AI SDR Admin</h1>
+  <h2>Accounts</h2>
+  <ul>
+    {% for a in accounts %}
+    <li>{{a.name}} ({{a.domain}}) score={{a.score}}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Drafts / Messages</h2>
+  <ul>
+    {% for m in messages %}
+    <li>#{{m.id}} {{m.channel}} {{m.step}} [{{m.status}}] - {{m.subject}}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Replies</h2>
+  <ul>
+    {% for r in replies %}
+    <li>#{{r.id}} {{r.received_at}} - {{r.classification_json}}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Suppression list entry</h2>
+  <form method="post" action="/suppression">
+    <input name="email_or_domain" placeholder="email or domain"/>
+    <input name="reason" placeholder="reason"/>
+    <button type="submit">Add</button>
+  </form>
+</body>
+</html>

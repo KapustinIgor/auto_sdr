@@ -1,0 +1,92 @@
+version: '3.9'
+services:
+  api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    env_file: .env
+    volumes:
+      - ./:/workspace/auto_sdr
+    working_dir: /workspace/auto_sdr
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - ollama
+    ports:
+      - "8000:8000"
+
+  workflow_worker:
+    build: .
+    command: python workers/workflow_worker.py
+    env_file: .env
+    volumes:
+      - ./:/workspace/auto_sdr
+    working_dir: /workspace/auto_sdr
+    depends_on:
+      - api
+
+  crawler_worker:
+    build: .
+    command: python workers/crawler_worker.py
+    env_file: .env
+    volumes:
+      - ./:/workspace/auto_sdr
+    working_dir: /workspace/auto_sdr
+    depends_on:
+      - api
+
+  reply_ingestor:
+    build: .
+    command: python workers/reply_ingestor.py
+    env_file: .env
+    volumes:
+      - ./:/workspace/auto_sdr
+    working_dir: /workspace/auto_sdr
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: auto_sdr
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  minio:
+    image: minio/minio:RELEASE.2024-06-06T09-36-42Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  pgdata:
+  miniodata:
+  ollama:
